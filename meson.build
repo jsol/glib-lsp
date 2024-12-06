@@ -8,4 +8,5 @@ deps += dependency('tree-sitter', static: true)
 deps += dependency('tree-sitter-c', static: true)
 
 subdir('src')
+subdir('tools')
 subdir('test')

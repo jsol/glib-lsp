@@ -8,6 +8,7 @@
       "line":3,
       "character":26
     },
+    "prio": 3,
     "msg": "Parameter name should be asserted"
   }
 ]

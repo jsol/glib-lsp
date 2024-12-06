@@ -47,7 +47,8 @@ load_issues(const gchar *file)
     start = json_object_get_object_member(j, "start");
     end = json_object_get_object_member(j, "end");
 
-    p = message_problem_new(3, json_object_get_int_member(start, "line"),
+    p = message_problem_new(json_object_get_int_member(j, "prio"),
+                            json_object_get_int_member(start, "line"),
                             json_object_get_int_member(start, "character"),
                             json_object_get_int_member(end, "line"),
                             json_object_get_int_member(end, "character"),
@@ -77,6 +78,9 @@ fixture_setup(struct fixture *f, gconstpointer user_data)
   GError *lerr = NULL;
 
   g_assert(f);
+  g_assert(name);
+
+  g_message("Setting up test %s", name);
   codefile = g_strdup_printf("%s/assert/%s.c", g_getenv("G_TEST_SRCDIR"), name);
   issuesfile = g_strdup_printf("%s/assert/%s.json", g_getenv("G_TEST_SRCDIR"),
                                name);
@@ -140,6 +144,13 @@ test_assert(struct fixture *f, gconstpointer user_data)
     }
   }
 
+  if (check != NULL) {
+    struct problem *p;
+    p = check->data;
+    g_warning("Have extra issue that is not supposed to be there: %s", p->msg);
+  }
+  g_assert_null(check);
+
   g_list_free_full(actual, message_problem_free);
 }
 
@@ -154,6 +165,15 @@ main(int argc, char *argv[])
              fixture_setup, test_assert, fixture_teardown);
   g_test_add("/message/process/assert/gpointer", struct fixture, "gpointer",
              fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/gconstpointer", struct fixture, "gconstpointer",
+             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/unused", struct fixture, "unused",
+             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/unused_const", struct fixture, "unused_const",
+             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/rename", struct fixture, "rename",
+             fixture_setup, test_assert, fixture_teardown);
+
 
   return g_test_run();
 }
