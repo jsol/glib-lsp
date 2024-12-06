@@ -10,7 +10,6 @@ parse_utils_node_eq(const gchar *content, TSNode *node, const gchar *needle)
 
   g_assert(content);
   g_assert(node);
-  g_assert(needle);
 
   s = content + ts_node_start_byte(*node);
 
@@ -81,7 +80,6 @@ parse_utils_parameter_is_pointer(const gchar *content, TSNode param, gchar **nam
     if (ts_node_symbol(n) == SYMBOL_POINTER_DECLARATION) {
       c = ts_node_named_child(n, 0);
       while (ts_node_symbol(c) != SYMBOL_IDENTIFIER) {
-        g_message("INSIDE LOOP %d (%s)", ts_node_symbol(c), ts_node_string(c));
         if (ts_node_named_child_count(c) == 0 || ts_node_is_null(c)) {
           return FALSE;
         }
@@ -94,4 +92,17 @@ parse_utils_parameter_is_pointer(const gchar *content, TSNode param, gchar **nam
   }
 
   return FALSE;
+}
+gboolean
+parse_utils_parameter_is_unused(const gchar *content, TSNode param)
+{
+  TSNode type;
+  g_assert(content);
+
+  type = ts_node_child_by_field_name(param, "type", strlen("type"));
+  if (ts_node_is_null(type)) {
+    return false;
+  }
+
+  return parse_utils_node_eq(content, &type, "G_GNUC_UNUSED");
 }

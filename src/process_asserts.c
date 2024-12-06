@@ -4,8 +4,8 @@
 #include "message.h"
 #include "parse_utils.h"
 #include "parser.h"
-#include "processor.h"
 #include "process_asserts.h"
+#include "processor.h"
 
 #define DEBUG FALSE
 static void
@@ -46,16 +46,93 @@ collect_asserts(GHashTable *res, const gchar *content, TSNode check)
   }
 }
 
+static TSNode
+get_first_node_id(TSNode check, guint id)
+{
+  for (guint i = 0; i < ts_node_named_child_count(check); i++) {
+    TSNode n = ts_node_named_child(check, i);
+    if (ts_node_symbol(n) == id) {
+      return n;
+    }
+
+    n = get_first_node_id(n, id);
+    if (ts_node_symbol(n) == id) {
+      return n;
+    }
+  }
+  return check;
+}
+
+static void
+collect_renames(GHashTable *res, const gchar *content, TSNode check)
+{
+  g_assert(res);
+  g_assert(content);
+
+  for (guint i = 0; i < ts_node_named_child_count(check); i++) {
+    TSNode n = ts_node_named_child(check, i);
+
+    if (ts_node_symbol(n) != SYMBOL_DECLARATION) {
+      collect_renames(res, content, n);
+      continue;
+    }
+
+    TSNode decl = ts_node_child_by_field_name(n, "declarator",
+                                              strlen("declarator"));
+    TSNode to = get_first_node_id(decl, SYMBOL_IDENTIFIER);
+
+    TSNode from = get_first_node_id(decl, SYMBOL_CAST_EXPRESSION);
+
+    if (ts_node_symbol(from) != SYMBOL_CAST_EXPRESSION) {
+      continue;
+    }
+    from = get_first_node_id(from, SYMBOL_IDENTIFIER);
+
+    if (ts_node_symbol(from) != SYMBOL_IDENTIFIER ||
+        ts_node_symbol(to) != SYMBOL_IDENTIFIER) {
+      continue;
+    }
+    g_hash_table_insert(res, parse_utils_node_get_string(content, &from),
+                        parse_utils_node_get_string(content, &to));
+    return;
+  }
+}
+
 static gboolean
-mentioned_with_null(G_GNUC_UNUSED const gchar *content, G_GNUC_UNUSED const gchar *var, G_GNUC_UNUSED TSNode function)
+mentioned_with_null(G_GNUC_UNUSED const gchar *content,
+                    G_GNUC_UNUSED const gchar *var,
+                    G_GNUC_UNUSED TSNode function)
 {
   return FALSE;
+}
+
+static gboolean
+renamed_assert(GHashTable *asserts, GHashTable *renames, const gchar *param)
+{
+  const gchar *p;
+
+  g_assert(asserts);
+  g_assert(renames);
+  g_assert(param);
+
+  if (!g_hash_table_contains(renames, param)) {
+    return FALSE;
+  }
+
+  p = g_hash_table_lookup(renames, param);
+
+  if (g_hash_table_contains(asserts, p)) {
+    return TRUE;
+  }
+
+  return renamed_assert(asserts, renames, p);
 }
 
 static void
 check_asserts(const gchar *content, TSNode function, GList **problems)
 {
   GHashTable *asserts;
+  GHashTable *renames;
   TSNode decl;
   TSNode params;
 
@@ -70,7 +147,9 @@ check_asserts(const gchar *content, TSNode function, GList **problems)
   }
 
   asserts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+  renames = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   collect_asserts(asserts, content, function);
+  collect_renames(renames, content, function);
 
   decl = ts_node_child_by_field_name(function, "declarator",
                                      strlen("declarator"));
@@ -85,19 +164,18 @@ check_asserts(const gchar *content, TSNode function, GList **problems)
   for (guint i = 0; i < ts_node_named_child_count(params); i++) {
     gchar *param = NULL;
     TSNode param_node;
-    g_message("Checking %d", i);
 
     param_node = ts_node_named_child(params, i);
-    if (parse_utils_parameter_is_pointer(content, param_node,
-                                         &param)) {
+    if (!parse_utils_parameter_is_unused(content, param_node) &&
+        parse_utils_parameter_is_pointer(content, param_node, &param)) {
       if (!g_hash_table_contains(asserts, param) &&
-          !mentioned_with_null(content, param, function)) {
+          !mentioned_with_null(content, param, function) &&
+          !renamed_assert(asserts, renames, param)) {
         struct problem *p;
         TSPoint start = ts_node_start_point(param_node);
         TSPoint end = ts_node_end_point(param_node);
         p = message_problem_new(3, start.row, start.column, end.row, end.column,
                                 "Parameter %s should be asserted", param);
-        g_message("Found problem with %s", param);
         *problems = g_list_prepend(*problems, p);
       }
       g_free(param);
@@ -115,6 +193,10 @@ recurse_check(const gchar *content,
               const gchar *level,
               GList **problems)
 {
+  g_assert(content);
+  g_assert(level);
+  g_assert(problems);
+
   gchar *next_level = g_strdup_printf("  %s", level);
   for (guint i = 0; i < ts_node_named_child_count(p); i++) {
     TSNode n = ts_node_named_child(p, i);
@@ -131,7 +213,6 @@ recurse_check(const gchar *content,
     }
 
     check_asserts(content, n, problems);
-    g_message("Checking level...");
     recurse_check(content, n, next_level, problems);
   }
   g_free(next_level);
@@ -145,7 +226,6 @@ process_asserts(parser_t *parser, G_GNUC_UNUSED struct process_ctx *ctx)
       parser->message->type == MESSAGE_TYPE_OPEN ||
       parser->message->type == MESSAGE_TYPE_CHANGE) {
     recurse_check(parser->content, parser->root_node, "", &res);
-    g_message("done checking");
   }
   return res;
 }
