@@ -5,6 +5,7 @@
 #include "parse_utils.h"
 #include "parser.h"
 #include "processor.h"
+#include "process_asserts.h"
 
 #define DEBUG FALSE
 static void
@@ -46,7 +47,7 @@ collect_asserts(GHashTable *res, const gchar *content, TSNode check)
 }
 
 static gboolean
-mentioned_with_null(const gchar *content, const gchar *var, TSNode function)
+mentioned_with_null(G_GNUC_UNUSED const gchar *content, G_GNUC_UNUSED const gchar *var, G_GNUC_UNUSED TSNode function)
 {
   return FALSE;
 }
@@ -137,7 +138,7 @@ recurse_check(const gchar *content,
 }
 
 GList *
-process_asserts(parser_t *parser, struct process_ctx *ctx)
+process_asserts(parser_t *parser, G_GNUC_UNUSED struct process_ctx *ctx)
 {
   GList *res = NULL;
   if (parser->message->type == MESSAGE_TYPE_DIAGNOSTIC ||

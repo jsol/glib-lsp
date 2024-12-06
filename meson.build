@@ -1,4 +1,4 @@
-project('curl-test', 'c')
+project('glib-lsp', 'c')
 deps = []
 deps += dependency('gio-2.0')
 deps += dependency('gio-unix-2.0')
@@ -8,4 +8,4 @@ deps += dependency('tree-sitter', static: true)
 deps += dependency('tree-sitter-c', static: true)
 
 subdir('src')
-
+subdir('test')

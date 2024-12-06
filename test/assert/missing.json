@@ -1,0 +1,13 @@
+[
+  {
+    "start": {
+      "line":3,
+      "character": 15
+    },
+    "end": {
+      "line":3,
+      "character":26
+    },
+    "msg": "Parameter name should be asserted"
+  }
+]

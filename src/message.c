@@ -231,7 +231,7 @@ get_response_root(gint64 id)
   return root;
 }
 
-JsonObject *
+static JsonObject *
 range_to_json(struct range *r)
 {
   JsonObject *root;
@@ -281,7 +281,7 @@ message_problem_new(gint severity,
   return p;
 }
 
-JsonArray *
+static JsonArray *
 diagnostics_to_json(GList *issues)
 {
   JsonArray *dia;

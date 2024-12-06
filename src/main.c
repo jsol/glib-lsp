@@ -29,7 +29,7 @@ add_processors(processor_t *p)
 }
 
 int
-main(int argc, char *argv[])
+main(G_GNUC_UNUSED int argc, G_GNUC_UNUSED char *argv[])
 {
   GError *err = NULL;
   gint ret_val = 0;
@@ -39,7 +39,6 @@ main(int argc, char *argv[])
   processor_t *processor;
 
   g_log_set_writer_func(g_log_writer_journald, NULL, NULL);
-  g_message("hello");
 
   stdinput = g_unix_input_stream_new(fileno(stdin), FALSE);
   processor = processor_new(g_unix_output_stream_new(fileno(stdout), FALSE));
