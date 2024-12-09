@@ -99,11 +99,44 @@ collect_renames(GHashTable *res, const gchar *content, TSNode check)
 }
 
 static gboolean
-mentioned_with_null(G_GNUC_UNUSED const gchar *content,
-                    G_GNUC_UNUSED const gchar *var,
-                    G_GNUC_UNUSED TSNode function)
+mentioned_with_null(const gchar *content, const gchar *var, TSNode function)
 {
-  return FALSE;
+  gboolean res = FALSE;
+  gchar *var_lower = NULL;
+  gchar *comment = NULL;
+  gchar *comment_lower = NULL;
+
+  g_assert(content);
+  g_assert(var);
+
+  var_lower = g_utf8_strdown(var, -1);
+
+  for (guint i = 0; i < ts_node_named_child_count(function); i++) {
+    TSNode n = ts_node_named_child(function, i);
+    if (ts_node_symbol(n) == SYMBOL_COMMENT) {
+      comment = parse_utils_node_get_string(content, &n);
+      comment_lower = g_utf8_strdown(comment, -1);
+
+      if (g_strstr_len(comment_lower, -1, var_lower) != NULL &&
+          g_strstr_len(comment_lower, -1, "null") != NULL) {
+        res = TRUE;
+        goto out;
+      }
+      g_clear_pointer(&comment, g_free);
+      g_clear_pointer(&comment_lower, g_free);
+    }
+    res = mentioned_with_null(content, var, n);
+    if (res) {
+      goto out;
+    }
+  }
+
+  /* Fall through */
+out:
+  g_clear_pointer(&var_lower, g_free);
+  g_clear_pointer(&comment, g_free);
+  g_clear_pointer(&comment_lower, g_free);
+  return res;
 }
 
 static gboolean

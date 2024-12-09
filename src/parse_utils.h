@@ -3,6 +3,7 @@
 #include <tree_sitter/api.h>
 
 #define SYMBOL_IDENTIFIER          1
+#define SYMBOL_COMMENT             160
 #define SYMBOL_FUNCTION            196
 #define SYMBOL_DECLARATION         198
 #define SYMBOL_POINTER_DECLARATION 226

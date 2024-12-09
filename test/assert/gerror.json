@@ -1,0 +1,14 @@
+[
+  {
+    "start": {
+      "line":3,
+      "character": 15
+    },
+    "end": {
+      "line":3,
+      "character":27
+    },
+    "prio": 3,
+    "msg": "Parameter err should be asserted"
+  }
+]

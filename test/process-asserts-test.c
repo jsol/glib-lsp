@@ -173,7 +173,12 @@ main(int argc, char *argv[])
              fixture_setup, test_assert, fixture_teardown);
   g_test_add("/message/process/assert/rename", struct fixture, "rename",
              fixture_setup, test_assert, fixture_teardown);
-
+  g_test_add("/message/process/assert/commented", struct fixture, "commented",
+             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/gerror", struct fixture, "gerror",
+             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/assert/gerror_ok", struct fixture, "gerror_ok",
+             fixture_setup, test_assert, fixture_teardown);
 
   return g_test_run();
 }
