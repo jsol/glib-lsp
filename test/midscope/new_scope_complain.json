@@ -1,0 +1,14 @@
+[
+  {
+    "start": {
+      "line":13,
+      "character": 11
+    },
+    "end": {
+      "line":13,
+      "character":17
+    },
+    "prio": 3,
+    "msg":"Declares should be done at the start of a body"
+  }
+]

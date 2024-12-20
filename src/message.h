@@ -2,6 +2,7 @@
 
 #include <gio/gio.h>
 #include <glib.h>
+#include <tree_sitter/api.h>
 #include "glibconfig.h"
 
 G_BEGIN_DECLS
@@ -69,12 +70,17 @@ typedef struct message {
 } message_t;
 
 struct problem *message_problem_new(gint severity,
-                               gint64 start_line,
-                               gint64 start_char,
-                               gint64 end_line,
-                               gint64 end_char,
-                               const gchar *format,
-                               ...);
+                                    TSNode *start,
+                                    TSNode *end,
+                                    const gchar *format,
+                                    ...);
+struct problem *message_problem_new_pos(gint severity,
+                                        guint64 start_line,
+                                        guint64 start_char,
+                                        guint64 end_line,
+                                        guint64 end_char,
+                                        const gchar *format,
+                                        ...);
 
 void message_problem_free(gpointer p);
 

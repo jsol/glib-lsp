@@ -12,12 +12,14 @@
 /* Processors */
 #include "process_init.h"
 #include "process_asserts.h"
+#include "process_midscope.h"
+#include "process_comments.h"
 
 static void
 add_processors(processor_t *p)
 {
-  g_assert(p);
   struct process_ctx  *ctx;
+  g_assert(p);
 
   ctx = g_malloc0(sizeof(*ctx));
   ctx->name = "glib_lsp";
@@ -26,6 +28,8 @@ add_processors(processor_t *p)
   /* TODO: Check config before adding processors */
   processor_add_process(p, process_init_do, ctx);
   processor_add_process(p, process_asserts, ctx);
+  processor_add_process(p, process_midscope, ctx);
+  processor_add_process(p, process_comments, ctx);
 }
 
 int

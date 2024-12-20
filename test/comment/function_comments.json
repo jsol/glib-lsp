@@ -1,0 +1,52 @@
+[
+  {
+    "start": {
+      "line":44,
+      "character": 28
+    },
+    "end": {
+      "line":44,
+      "character":43
+    },
+    "prio": 3,
+    "msg": "Extra params are documented"
+  },
+
+  {
+    "start": {
+      "line":35,
+      "character": 0
+    },
+    "end": {
+      "line":35,
+      "character":52
+    },
+    "prio": 3,
+    "msg": "Functions return value should be documented with @return"
+  },
+  {
+    "start": {
+      "line":28,
+      "character": 47
+    },
+    "end": {
+      "line":28,
+      "character":51
+    },
+    "prio": 3,
+    "msg": "Parameter self is not documented"
+  },
+  {
+    "start": {
+      "line":21,
+      "character": 0
+    },
+    "end": {
+      "line":21,
+      "character":49
+    },
+    "prio": 3,
+    "msg": "Function should be documented"
+  }
+]
+

@@ -9,6 +9,6 @@
       "character":27
     },
     "prio": 3,
-    "msg": "Parameter err should be asserted"
+    "msg": "GErrors should be asserted (err == NULL || *err == NULL)"
   }
 ]

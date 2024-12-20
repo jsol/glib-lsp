@@ -3,6 +3,9 @@ LSP commenting things I should do while writing C code using glib
 
 ## Setup neovim
 ```
+-- Use c LSPs for h files
+vim.g.c_syntax_for_h = true
+
 local gliblsp = vim.lsp.start_client{
   name = "glib-lsp",
   cmd = { "glib-lsp" }

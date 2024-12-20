@@ -5,6 +5,8 @@
 #include "message.h"
 #include "parser.h"
 #include "process_asserts.h"
+#include "process_midscope.h"
+#include "process_comments.h"
 
 int
 main(int argc, char *argv[])
@@ -45,7 +47,11 @@ main(int argc, char *argv[])
 
   parser = parser_new(msg, ht);
 
-  if (g_strcmp0(argv[1], "assert") == 0) {
+  if (g_strcmp0(argv[1], "midscope") == 0) {
+    issues = process_midscope(parser, NULL);
+  }else if (g_strcmp0(argv[1], "comment") == 0) {
+    issues = process_comments(parser, NULL);
+  }else if (g_strcmp0(argv[1], "assert") == 0) {
     issues = process_asserts(parser, NULL);
   } else {
     g_print("Could not find parser %s\n", argv[1]);

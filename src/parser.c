@@ -43,7 +43,7 @@ parser_new(message_t *msg, GHashTable *files)
     break;
   default:
     /* Ignore */
-    g_message("ignoring type");
+    g_message("ignoring type %u", msg->type);
   }
 
   if (parser->content != NULL) {

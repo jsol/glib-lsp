@@ -3,7 +3,7 @@
 
 #include "message.h"
 #include "parser.h"
-#include "process_asserts.h"
+#include "process_comments.h"
 
 struct fixture {
   parser_t *parser;
@@ -48,11 +48,11 @@ load_issues(const gchar *file)
     end = json_object_get_object_member(j, "end");
 
     p = message_problem_new_pos(json_object_get_int_member(j, "prio"),
-                            json_object_get_int_member(start, "line"),
-                            json_object_get_int_member(start, "character"),
-                            json_object_get_int_member(end, "line"),
-                            json_object_get_int_member(end, "character"),
-                            json_object_get_string_member(j, "msg"));
+                                json_object_get_int_member(start, "line"),
+                                json_object_get_int_member(start, "character"),
+                                json_object_get_int_member(end, "line"),
+                                json_object_get_int_member(end, "character"),
+                                json_object_get_string_member(j, "msg"));
 
     res = g_list_prepend(res, p);
   }
@@ -81,8 +81,8 @@ fixture_setup(struct fixture *f, gconstpointer user_data)
   g_assert(name);
 
   g_message("Setting up test %s", name);
-  codefile = g_strdup_printf("%s/assert/%s.c", g_getenv("G_TEST_SRCDIR"), name);
-  issuesfile = g_strdup_printf("%s/assert/%s.json", g_getenv("G_TEST_SRCDIR"),
+  codefile = g_strdup_printf("%s/comment/%s.c", g_getenv("G_TEST_SRCDIR"), name);
+  issuesfile = g_strdup_printf("%s/comment/%s.json", g_getenv("G_TEST_SRCDIR"),
                                name);
 
   if (!g_file_get_contents(codefile, &content, NULL, &lerr)) {
@@ -127,7 +127,7 @@ assert_problem(struct problem *exp, struct problem *act)
 }
 
 void
-test_assert(struct fixture *f, gconstpointer user_data)
+test_comments(struct fixture *f, gconstpointer user_data)
 {
   parser_t *parser = (parser_t *) f;
   GList *actual;
@@ -135,7 +135,7 @@ test_assert(struct fixture *f, gconstpointer user_data)
 
   g_assert(parser);
 
-  actual = process_asserts(f->parser, NULL);
+  actual = process_comments(f->parser, NULL);
   check = actual;
   for (GList *exp = f->issues; exp != NULL; exp = exp->next) {
     assert_problem(exp->data, check->data);
@@ -146,6 +146,7 @@ test_assert(struct fixture *f, gconstpointer user_data)
 
   if (check != NULL) {
     struct problem *p;
+
     p = check->data;
     g_warning("Have extra issue that is not supposed to be there: %s", p->msg);
   }
@@ -161,28 +162,13 @@ main(int argc, char *argv[])
 
   // Define the tests.
 
-  g_test_add("/message/process/assert/missing", struct fixture, "missing",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/gpointer", struct fixture, "gpointer",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/gconstpointer", struct fixture, "gconstpointer",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/unused", struct fixture, "unused",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/unused_const", struct fixture, "unused_const",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/rename", struct fixture, "rename",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/commented", struct fixture, "commented",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/gerror", struct fixture, "gerror",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/gerror_ok", struct fixture, "gerror_ok",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/cast", struct fixture, "cast",
-             fixture_setup, test_assert, fixture_teardown);
-  g_test_add("/message/process/assert/explicit_check", struct fixture, "explicit_check",
-             fixture_setup, test_assert, fixture_teardown);
+  g_test_add("/message/process/comment/struct", struct fixture, "struct",
+             fixture_setup, test_comments, fixture_teardown);
+  g_test_add("/message/process/comment/nested_struct", struct fixture,
+             "nested_struct", fixture_setup, test_comments, fixture_teardown);
+  g_test_add("/message/process/comment/function_comments", struct fixture,
+             "function_comments", fixture_setup, test_comments,
+             fixture_teardown);
 
   return g_test_run();
 }

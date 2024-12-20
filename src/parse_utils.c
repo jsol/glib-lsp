@@ -3,6 +3,32 @@
 
 #include "parse_utils.h"
 
+TSNode
+parse_utils_get_first_node_id(TSNode check, guint id, gboolean *found)
+{
+  for (guint i = 0; i < ts_node_named_child_count(check); i++) {
+    TSNode n = ts_node_named_child(check, i);
+    if (ts_node_symbol(n) == id) {
+      if (found) {
+        *found = TRUE;
+      }
+      return n;
+    }
+  }
+  for (guint i = 0; i < ts_node_named_child_count(check); i++) {
+    TSNode n = ts_node_named_child(check, i);
+    n = parse_utils_get_first_node_id(n, id, found);
+    if (ts_node_symbol(n) == id) {
+      /* Found already set */
+      return n;
+    }
+  }
+  if (found) {
+    *found = FALSE;
+  }
+  return check;
+}
+
 gboolean
 parse_utils_node_eq(const gchar *content, TSNode *node, const gchar *needle)
 {
@@ -23,6 +49,85 @@ parse_utils_node_get_string(const gchar *content, TSNode *node)
   guint end = ts_node_end_byte(*node);
   gsize len = end - start;
   return g_strndup(content + start, len);
+}
+
+gboolean
+parse_utils_is_gobject_cast(const gchar *content,
+                             TSNode decl,
+                             gchar **to,
+                             gchar **from)
+{
+  gchar *func_name;
+  GString *func_name_upper;
+  gchar *type_name;
+  gchar *type_name_upper;
+
+  gboolean found;
+  TSNode type = parse_utils_get_first_node_id(decl, SYMBOL_TYPE, &found);
+  if (!found) {
+    return FALSE;
+  }
+  TSNode pdecl = parse_utils_get_first_node_id(decl, SYMBOL_POINTER_DECLARATION,
+                                                &found);
+  if (!found) {
+    return FALSE;
+  }
+
+  TSNode call_node = parse_utils_get_first_node_id(decl, SYMBOL_CALL_EXPRESSION,
+                                                    &found);
+
+  if (!found) {
+    return FALSE;
+  }
+
+  TSNode to_node = parse_utils_get_first_node_id(pdecl, SYMBOL_IDENTIFIER,
+                                                  &found);
+  if (!found) {
+    return FALSE;
+  }
+  TSNode func_name_node = parse_utils_get_first_node_id(call_node,
+                                                         SYMBOL_IDENTIFIER,
+                                                         &found);
+  if (!found) {
+    return FALSE;
+  }
+  TSNode args_node = parse_utils_get_first_node_id(call_node, SYMBOL_ARG_LIST,
+                                                    &found);
+  if (!found) {
+    return FALSE;
+  }
+  TSNode from_node = parse_utils_get_first_node_id(args_node,
+                                                    SYMBOL_IDENTIFIER, &found);
+  if (!found) {
+    return FALSE;
+  }
+
+  func_name = parse_utils_node_get_string(content, &func_name_node);
+  type_name = parse_utils_node_get_string(content, &type);
+
+  type_name_upper = g_ascii_strup(type_name, -1);
+  func_name_upper = g_string_new(func_name);
+  g_string_ascii_up(func_name_upper);
+  g_string_replace(func_name_upper, "_", "", -1);
+
+  if (g_strcmp0(type_name_upper, func_name_upper->str) != 0) {
+    g_free(func_name);
+    g_free(type_name);
+    g_free(type_name_upper);
+    g_string_free(func_name_upper, TRUE);
+
+    return FALSE;
+  }
+
+  *from = parse_utils_node_get_string(content, &from_node);
+  *to = parse_utils_node_get_string(content, &to_node);
+
+  g_free(func_name);
+  g_free(type_name);
+  g_free(type_name_upper);
+  g_string_free(func_name_upper, TRUE);
+
+  return TRUE;
 }
 
 gboolean

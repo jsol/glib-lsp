@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <json-glib/json-glib.h>
+#include <tree_sitter/api.h>
 
 #include "message.h"
 
@@ -254,15 +255,14 @@ range_to_json(struct range *r)
 
   return root;
 }
-
 struct problem *
-message_problem_new(gint severity,
-                    gint64 start_line,
-                    gint64 start_char,
-                    gint64 end_line,
-                    gint64 end_char,
-                    const gchar *format,
-                    ...)
+message_problem_new_pos(gint severity,
+                        guint64 start_line,
+                        guint64 start_char,
+                        guint64 end_line,
+                        guint64 end_char,
+                        const gchar *format,
+                        ...)
 {
   struct problem *p;
   va_list args;
@@ -276,6 +276,32 @@ message_problem_new(gint severity,
   p->range.start.character = start_char;
   p->range.end.line = end_line;
   p->range.end.character = end_char;
+  p->severity = severity;
+
+  return p;
+}
+
+struct problem *
+message_problem_new(gint severity,
+                    TSNode *start_node,
+                    TSNode *end_node,
+                    const gchar *format,
+                    ...)
+{
+  struct problem *p;
+  va_list args;
+  TSPoint start = ts_node_start_point(*start_node);
+  TSPoint end = ts_node_end_point(*end_node);
+
+  p = g_malloc0(sizeof(*p));
+  va_start(args, format);
+  p->msg = g_strdup_vprintf(format, args);
+  va_end(args);
+
+  p->range.start.line = start.row;
+  p->range.start.character = start.column;
+  p->range.end.line = end.row;
+  p->range.end.character = end.column;
   p->severity = severity;
 
   return p;
@@ -344,8 +370,6 @@ message_init_response(gint64 id,
                       const gchar *server_name,
                       const gchar *version)
 {
-  g_return_val_if_fail(c != NULL, NULL);
-
   JsonObject *root;
   JsonObject *result;
   JsonObject *server_info;
@@ -353,6 +377,8 @@ message_init_response(gint64 id,
   JsonObject *code_action;
   JsonArray *kinds;
   gchar *res;
+
+  g_return_val_if_fail(c != NULL, NULL);
 
   root = get_response_root(id);
   result = json_object_new();

@@ -1,0 +1,40 @@
+[
+  {
+    "start": {
+      "line":8,
+      "character": 9
+    },
+    "end": {
+      "line":8,
+      "character":19
+    },
+    "prio": 3,
+    "msg": "Struct field should be commented"
+  },
+
+  {
+    "start": {
+      "line":5,
+      "character": 9
+    },
+    "end": {
+      "line":5,
+      "character":19
+    },
+    "prio": 3,
+    "msg": "Struct field should be commented"
+  },
+  {
+    "start": {
+      "line":4,
+      "character": 9
+    },
+    "end": {
+      "line":4,
+      "character":19
+    },
+    "prio": 3,
+    "msg": "Struct field should be commented"
+  }
+]
+

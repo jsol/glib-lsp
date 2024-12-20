@@ -1,5 +1,7 @@
 tests = [
   {'name': 'process-asserts'},
+  {'name': 'process-midscope'},
+  {'name': 'process-comments'},
 ]
 
 foreach test : tests

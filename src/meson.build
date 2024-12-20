@@ -20,6 +20,8 @@ sources = (
     'parse_utils.c',
     'parser.c',
     'process_asserts.c',
+    'process_comments.c',
+    'process_midscope.c',
     'process_init.c',
     'processor.c',
     'rpc.c',
